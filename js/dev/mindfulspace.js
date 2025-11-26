@@ -116,6 +116,34 @@ function tabs() {
   }
 }
 window.addEventListener("load", tabs);
+(function() {
+  const containers = document.querySelectorAll("[data-quotes]");
+  if (!containers.length) return;
+  containers.forEach((container) => {
+    const items = Array.from(container.querySelectorAll("[data-quote-item]"));
+    const wrapper = container.parentElement;
+    const nextBtn = wrapper ? wrapper.querySelector("[data-quote-next]") : null;
+    if (!items.length) return;
+    if (items.length === 1) {
+      items[0].classList.add("is-active");
+      if (nextBtn) nextBtn.style.display = "none";
+      return;
+    }
+    let current = 0;
+    function showQuote(index) {
+      items.forEach((item, i) => {
+        item.classList.toggle("is-active", i === index);
+      });
+    }
+    showQuote(current);
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        current = (current + 1) % items.length;
+        showQuote(current);
+      });
+    }
+  });
+})();
 const DARKLITE_STORAGE_KEY = "fls-user-theme";
 function getHours() {
   const now = /* @__PURE__ */ new Date();
