@@ -216,6 +216,161 @@ function darkliteInit() {
   FLS && FLS.log && FLS.log(`Darklite: активна тема "${initialTheme}"`);
 }
 window.addEventListener("load", darkliteInit);
+document.addEventListener("DOMContentLoaded", function() {
+  const widgets = document.querySelectorAll("[data-fls-breathingpractice]");
+  widgets.forEach(initBreathingPractice);
+});
+function initBreathingPractice(root) {
+  const circleEl = root.querySelector(".breathingpractice__circle");
+  const numberEl = root.querySelector(".breathingpractice__circle-number");
+  const phaseTextEl = root.querySelector(".breathingpractice__circle-text");
+  const startBtn = root.querySelector(".breathingpractice__button");
+  const resetBtn = root.querySelector(".breathingpractice__button-reset");
+  if (!circleEl || !numberEl || !phaseTextEl || !startBtn || !resetBtn) {
+    return;
+  }
+  let startLabelEl = root.querySelector(".breathingpractice__button-label");
+  if (!startLabelEl) {
+    const svg = startBtn.querySelector("svg");
+    const text = (startBtn.textContent || "Start").trim();
+    startBtn.textContent = "";
+    if (svg) {
+      startBtn.appendChild(svg);
+    }
+    startLabelEl = document.createElement("span");
+    startLabelEl.className = "breathingpractice__button-label";
+    startLabelEl.textContent = text || "Start";
+    startBtn.appendChild(startLabelEl);
+  }
+  const groups = root.querySelectorAll(".breathingpractice_colomn-structure");
+  if (groups.length < 2) return;
+  const durationButtons = Array.from(groups[0].querySelectorAll(".breathingpractice__settings-button"));
+  const speedButtons = Array.from(groups[1].querySelectorAll(".breathingpractice__settings-button"));
+  let isActive = false;
+  let phase = "inhale";
+  let durationMin = 3;
+  let breathSpeed = 4;
+  let seconds = breathSpeed;
+  let intervalId = null;
+  function getPhaseColor(p) {
+    if (p === "inhale") return "#8B71EE";
+    if (p === "hold") return "#F4A4BF";
+    return "#6B52C9";
+  }
+  function updateUI() {
+    const color = getPhaseColor(phase);
+    numberEl.textContent = String(seconds);
+    phaseTextEl.textContent = phase;
+    circleEl.style.borderColor = color;
+    circleEl.style.boxShadow = `0 0 30px ${color}40`;
+    circleEl.style.background = `radial-gradient(circle, ${color}20, ${color}10)`;
+    numberEl.style.color = color;
+    const isBig = isActive && (phase === "inhale" || phase === "hold");
+    circleEl.style.width = isBig ? "180px" : "140px";
+    circleEl.style.height = isBig ? "180px" : "140px";
+    if (isActive) {
+      startLabelEl.textContent = "Pause";
+      startBtn.classList.add("breathingpractice__button--paused");
+    } else {
+      startLabelEl.textContent = "Start";
+      startBtn.classList.remove("breathingpractice__button--paused");
+    }
+    durationButtons.forEach((btn) => {
+      const txt = btn.textContent.trim();
+      const mins = parseInt(txt, 10);
+      const isCurrent = mins === durationMin;
+      btn.classList.toggle("breathingpractice__settings-button--active", isCurrent);
+    });
+    speedButtons.forEach((btn) => {
+      const txt = btn.textContent.trim();
+      const speed = parseInt(txt, 10);
+      const isCurrent = speed === breathSpeed;
+      btn.classList.toggle("breathingpractice__settings-button--active", isCurrent);
+    });
+  }
+  function startTimer() {
+    if (intervalId) return;
+    intervalId = window.setInterval(function() {
+      if (seconds <= 1) {
+        if (phase === "inhale") {
+          phase = "hold";
+        } else if (phase === "hold") {
+          phase = "exhale";
+        } else {
+          phase = "inhale";
+        }
+        seconds = breathSpeed;
+      } else {
+        seconds -= 1;
+      }
+      updateUI();
+    }, 1e3);
+  }
+  function stopTimer() {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
+  function handleReset() {
+    stopTimer();
+    isActive = false;
+    phase = "inhale";
+    seconds = breathSpeed;
+    updateUI();
+  }
+  startBtn.addEventListener("click", function() {
+    isActive = !isActive;
+    if (isActive) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+    updateUI();
+  });
+  resetBtn.addEventListener("click", handleReset);
+  durationButtons.forEach((btn) => {
+    btn.addEventListener("click", function() {
+      const txt = btn.textContent.trim();
+      const mins = parseInt(txt, 10);
+      if (!isNaN(mins)) {
+        durationMin = mins;
+        updateUI();
+      }
+    });
+  });
+  speedButtons.forEach((btn) => {
+    btn.addEventListener("click", function() {
+      const txt = btn.textContent.trim();
+      const speed = parseInt(txt, 10);
+      if (!isNaN(speed)) {
+        breathSpeed = speed;
+        if (!isActive) {
+          seconds = breathSpeed;
+        }
+        updateUI();
+      }
+    });
+  });
+  const activeDuration = durationButtons.find(
+    (btn) => btn.classList.contains("breathingpractice__settings-button--active")
+  );
+  if (activeDuration) {
+    const mins = parseInt(activeDuration.textContent.trim(), 10);
+    if (!isNaN(mins)) durationMin = mins;
+  }
+  const activeSpeed = speedButtons.find(
+    (btn) => btn.classList.contains("breathingpractice__settings-button--active")
+  );
+  if (activeSpeed) {
+    const speed = parseInt(activeSpeed.textContent.trim(), 10);
+    if (!isNaN(speed)) {
+      breathSpeed = speed;
+      seconds = speed;
+    }
+  }
+  updateUI();
+}
 (() => {
   const asideBody = document.querySelector(".aside__body");
   const asideBurger = document.querySelector(".aside__burger");
