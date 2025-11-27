@@ -217,6 +217,97 @@ function darkliteInit() {
 }
 window.addEventListener("load", darkliteInit);
 document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll("[data-fls-moodtoday]").forEach(initMoodTodayWidget);
+});
+function initMoodTodayWidget(root) {
+  const track = root.querySelector(".moodtoday__scrollbars-track");
+  const range = root.querySelector(".moodtoday__scrollbars-range");
+  const thumb = root.querySelector(".moodtoday__scrollbars-thumb");
+  const smileEl = root.querySelector(".moodtoday__smille");
+  const centerTextEl = root.querySelector(".moodtoday__text-center");
+  const trackBarEl = root.querySelector(".moodtoday__track-emotion");
+  if (!track || !range || !thumb || !smileEl || !centerTextEl || !trackBarEl) return;
+  let value = 10;
+  let dragging = false;
+  const moods = [
+    { min: 0, max: 20, label: "Very Low", emoji: "😔", color: "#6B52C9" },
+    { min: 20, max: 40, label: "Low", emoji: "🙁", color: "#6B52C9" },
+    { min: 40, max: 60, label: "Neutral", emoji: "😐", color: "#F2B01E" },
+    { min: 60, max: 80, label: "Good", emoji: "🙂", color: "#4CAF50" },
+    { min: 80, max: 101, label: "Great", emoji: "😄", color: "#4CAF50" }
+  ];
+  function clamp01(x) {
+    return Math.max(0, Math.min(1, x));
+  }
+  function setFromClientX(clientX) {
+    const rect = track.getBoundingClientRect();
+    const ratio = clamp01((clientX - rect.left) / rect.width);
+    value = ratio * 100;
+    updateUI();
+  }
+  function getMoodForValue(v) {
+    return moods.find((m) => v >= m.min && v < m.max) || moods[moods.length - 1];
+  }
+  function updateUI() {
+    const percent = value;
+    const mood = getMoodForValue(percent);
+    range.style.width = percent + "%";
+    thumb.style.left = percent + "%";
+    thumb.setAttribute("aria-valuenow", String(Math.round(percent)));
+    centerTextEl.textContent = mood.label;
+    centerTextEl.style.color = mood.color;
+    smileEl.textContent = mood.emoji;
+    smileEl.style.filter = `drop-shadow(0 0 20px ${mood.color}40)`;
+    trackBarEl.style.width = percent + "%";
+  }
+  track.addEventListener("mousedown", function(e) {
+    e.preventDefault();
+    dragging = true;
+    setFromClientX(e.clientX);
+  });
+  thumb.addEventListener("mousedown", function(e) {
+    e.preventDefault();
+    dragging = true;
+  });
+  document.addEventListener("mousemove", function(e) {
+    if (!dragging) return;
+    setFromClientX(e.clientX);
+  });
+  document.addEventListener("mouseup", function() {
+    dragging = false;
+  });
+  track.addEventListener("touchstart", function(e) {
+    const t = e.touches[0];
+    if (!t) return;
+    dragging = true;
+    setFromClientX(t.clientX);
+  }, { passive: true });
+  thumb.addEventListener("touchstart", function(e) {
+    dragging = true;
+  }, { passive: true });
+  document.addEventListener("touchmove", function(e) {
+    if (!dragging) return;
+    const t = e.touches[0];
+    if (!t) return;
+    setFromClientX(t.clientX);
+  }, { passive: true });
+  document.addEventListener("touchend", function() {
+    dragging = false;
+  });
+  thumb.addEventListener("keydown", function(e) {
+    const step = 5;
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      value = Math.max(0, value - step);
+      updateUI();
+    }
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      value = Math.min(100, value + step);
+      updateUI();
+    }
+  });
+  updateUI();
+}
+document.addEventListener("DOMContentLoaded", function() {
   const widgets = document.querySelectorAll("[data-fls-breathingpractice]");
   widgets.forEach(initBreathingPractice);
 });
