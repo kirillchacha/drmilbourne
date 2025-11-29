@@ -223,10 +223,11 @@ function initMoodTodayWidget(root) {
   const track = root.querySelector(".moodtoday__scrollbars-track");
   const range = root.querySelector(".moodtoday__scrollbars-range");
   const thumb = root.querySelector(".moodtoday__scrollbars-thumb");
+  const thumbBlock = root.querySelector(".moodtoday__thumb-block");
   const smileEl = root.querySelector(".moodtoday__smille");
   const centerTextEl = root.querySelector(".moodtoday__text-center");
   const trackBarEl = root.querySelector(".moodtoday__track-emotion");
-  if (!track || !range || !thumb || !smileEl || !centerTextEl || !trackBarEl) return;
+  if (!track || !range || !thumb || !thumbBlock || !smileEl || !centerTextEl || !trackBarEl) return;
   let value = 10;
   let dragging = false;
   const moods = [
@@ -252,7 +253,7 @@ function initMoodTodayWidget(root) {
     const percent = value;
     const mood = getMoodForValue(percent);
     range.style.width = percent + "%";
-    thumb.style.left = percent + "%";
+    thumbBlock.style.left = percent + "%";
     thumb.setAttribute("aria-valuenow", String(Math.round(percent)));
     centerTextEl.textContent = mood.label;
     centerTextEl.style.color = mood.color;
@@ -306,6 +307,37 @@ function initMoodTodayWidget(root) {
     }
   });
   updateUI();
+}
+document.addEventListener("DOMContentLoaded", function() {
+  const widgets = document.querySelectorAll("[data-fls-feeltoday]");
+  widgets.forEach(initFeelToday);
+});
+function initFeelToday(root) {
+  const itemButtons = root.querySelectorAll(".feeltoday__item-button");
+  const feelingBox = root.querySelector(".feeltoday__feeling");
+  const feelingSpan = root.querySelector(".feeltoday__feeling-item");
+  if (!itemButtons.length || !feelingBox || !feelingSpan) return;
+  feelingSpan.textContent = "";
+  feelingBox.classList.remove("feeltoday__feeling--visible");
+  itemButtons.forEach((button) => {
+    button.addEventListener("click", function() {
+      button.classList.toggle("feeltoday__item-button--active");
+      updateFeeling();
+    });
+  });
+  function updateFeeling() {
+    const activeTextNodes = root.querySelectorAll(
+      ".feeltoday__item-button--active .feeltoday__smille-text"
+    );
+    const labels = Array.from(activeTextNodes).map((el) => el.textContent.trim()).filter(Boolean);
+    if (labels.length > 0) {
+      feelingSpan.textContent = labels.join(", ");
+      feelingBox.classList.add("feeltoday__feeling--visible");
+    } else {
+      feelingSpan.textContent = "";
+      feelingBox.classList.remove("feeltoday__feeling--visible");
+    }
+  }
 }
 document.addEventListener("DOMContentLoaded", function() {
   const widgets = document.querySelectorAll("[data-fls-breathingpractice]");
