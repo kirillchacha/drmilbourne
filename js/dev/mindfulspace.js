@@ -217,6 +217,55 @@ function darkliteInit() {
 }
 window.addEventListener("load", darkliteInit);
 document.addEventListener("DOMContentLoaded", function() {
+  const widgets = document.querySelectorAll("[data-fls-thoughtjournal]");
+  widgets.forEach(initThoughtJournal);
+});
+function initThoughtJournal(root) {
+  const textarea = root.querySelector(".thoughtjournal__input");
+  const saveBtn = root.querySelector(".thoughtjournal__thought-save");
+  const clearBtn = root.querySelector(".thoughtjournal__thought-clear");
+  if (!textarea || !saveBtn || !clearBtn) return;
+  const keySuffix = root.dataset.journalKey || "default";
+  const STORAGE_KEY = "fls_thought_journal_" + keySuffix;
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved && saved.length > 0) {
+    textarea.value = saved;
+  } else {
+    textarea.value = "";
+  }
+  updateButtons();
+  textarea.addEventListener("input", function() {
+    updateButtons();
+  });
+  saveBtn.addEventListener("click", function() {
+    const value = textarea.value.trim();
+    if (!value) {
+      return;
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, value);
+    } catch (e) {
+    }
+    updateButtons();
+  });
+  clearBtn.addEventListener("click", function() {
+    textarea.value = "";
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+    }
+    updateButtons();
+  });
+  function updateButtons() {
+    const current = textarea.value.trim();
+    const saved2 = localStorage.getItem(STORAGE_KEY) || "";
+    const hasText = current.length > 0;
+    const isChanged = current !== saved2;
+    saveBtn.disabled = !(hasText && isChanged);
+    clearBtn.disabled = !(hasText || saved2.length > 0);
+  }
+}
+document.addEventListener("DOMContentLoaded", function() {
   document.querySelectorAll("[data-fls-moodtoday]").forEach(initMoodTodayWidget);
 });
 function initMoodTodayWidget(root) {
