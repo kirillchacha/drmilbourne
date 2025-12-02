@@ -5,11 +5,11 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="shortcut icon" href="assets/img/favicon.ico">
 		<title>mindfulspace</title>
-		<script type="module" crossorigin="" src="./js/mindfulspace.min.js?v=1764512836499"></script>
-		<link rel="modulepreload" crossorigin="" href="./js/main.min.js?v=1764512836499">
-		<link rel="modulepreload" crossorigin="" href="./js/common.min.js?v=1764512836499">
-		<link rel="stylesheet" crossorigin="" href="./css/main.min.css?v=1764512836499">
-		<link rel="stylesheet" crossorigin="" href="./css/mindfulspace.min.css?v=1764512836499">
+		<script type="module" crossorigin="" src="./js/mindfulspace.min.js?v=1764684708498"></script>
+		<link rel="modulepreload" crossorigin="" href="./js/main.min.js?v=1764684708498">
+		<link rel="modulepreload" crossorigin="" href="./js/common.min.js?v=1764684708498">
+		<link rel="stylesheet" crossorigin="" href="./css/main.min.css?v=1764684708498">
+		<link rel="stylesheet" crossorigin="" href="./css/mindfulspace.min.css?v=1764684708498">
 	</head>
 	<body class="body-mindfulspace">
 		<div class="wrapper">
@@ -71,11 +71,10 @@
 									<h2 class="sounds-aside__headline">Ambient Sounds</h2>
 								</div>
 								<div class="sounds-aside__items">
-									<button type="button" class="sounds-aside__item sounds-aside__item--active">
-										Name song
+									<button type="button" class="sounds-aside__item">
+										Name song Test
 										<audio class="sounds-aside__audio" controls>
-											<source src="" type="audio/ogg">
-											<source src="" type="audio/mpeg">
+											<source src="./files/audio/AnnenMayKantereit-Ausgehen.mp3" type="audio/mpeg">
 										</audio>
 									</button>
 									<button type="button" class="sounds-aside__item">
@@ -1123,6 +1122,21 @@
 			<footer data-fls-footer="" class="footer">
 				<div class="footer__container"></div>
 			</footer>
+		</div>
+		<div data-fls-soundscontroller="" class="sounds-controller" data-sounds-controller="" aria-hidden="true">
+			<div class="sounds-controller__inner">
+				<button type="button" class="sounds-controller__play" data-sc-play="">
+					<span class="sounds-controller__play-icon"></span>
+				</button>
+				<div class="sounds-controller__info">
+					<div class="sounds-controller__title" data-sc-title="">Select a track</div>
+					<div class="sounds-controller__progress">
+						<span class="sounds-controller__time" data-sc-current="">0:00</span>
+						<input type="range" min="0" max="100" value="0" step="0.1" class="sounds-controller__seek" data-sc-seek="">
+						<span class="sounds-controller__time" data-sc-duration="">0:00</span>
+					</div>
+				</div>
+			</div>
 		</div>
 	</body>
 </html>

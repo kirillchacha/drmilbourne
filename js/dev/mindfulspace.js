@@ -567,3 +567,155 @@ function initBreathingPractice(root) {
     }
   });
 })();
+(function() {
+  const items = document.querySelectorAll(".sounds-aside__item");
+  const controller = document.querySelector("[data-sounds-controller]");
+  if (!items.length || !controller) return;
+  let currentAudio = null;
+  const playBtn = controller.querySelector("[data-sc-play]");
+  const seekInput = controller.querySelector("[data-sc-seek]");
+  const titleEl = controller.querySelector("[data-sc-title]");
+  const currentTimeEl = controller.querySelector("[data-sc-current]");
+  const durationEl = controller.querySelector("[data-sc-duration]");
+  function formatTime(sec) {
+    if (!sec || !isFinite(sec)) return "0:00";
+    sec = Math.floor(sec);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ":" + String(s).padStart(2, "0");
+  }
+  function showController(show) {
+    if (show) {
+      controller.classList.add("sounds-controller--visible");
+      controller.setAttribute("aria-hidden", "false");
+    } else {
+      controller.classList.remove("sounds-controller--visible");
+      controller.setAttribute("aria-hidden", "true");
+    }
+  }
+  function resetController() {
+    playBtn.classList.remove("is-playing");
+    seekInput.value = 0;
+    currentTimeEl.textContent = "0:00";
+    durationEl.textContent = "0:00";
+    titleEl.textContent = "Select a track";
+  }
+  function onTimeUpdate() {
+    if (!currentAudio) return;
+    const duration = currentAudio.duration || 0;
+    const current = currentAudio.currentTime || 0;
+    currentTimeEl.textContent = formatTime(current);
+    if (duration > 0) {
+      const percent = current / duration * 100;
+      seekInput.value = percent;
+    } else {
+      seekInput.value = 0;
+    }
+  }
+  function onLoadedMetadata() {
+    if (!currentAudio) return;
+    durationEl.textContent = formatTime(currentAudio.duration || 0);
+  }
+  function onEnded() {
+    if (!currentAudio) return;
+    playBtn.classList.remove("is-playing");
+    seekInput.value = 0;
+  }
+  function detachAudioEvents(audio) {
+    if (!audio) return;
+    audio.removeEventListener("timeupdate", onTimeUpdate);
+    audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+    audio.removeEventListener("ended", onEnded);
+  }
+  function attachAudioEvents(audio) {
+    if (!audio) return;
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("ended", onEnded);
+  }
+  function setActiveItem(item, audio) {
+    if (currentAudio && currentAudio !== audio) {
+      detachAudioEvents(currentAudio);
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+    items.forEach((el) => el.classList.remove("sounds-aside__item--active"));
+    if (!audio) {
+      currentAudio = null;
+      resetController();
+      showController(false);
+      return;
+    }
+    currentAudio = audio;
+    item.classList.add("sounds-aside__item--active");
+    const titleElInItem = item.querySelector(".sounds-aside__title");
+    titleEl.textContent = titleElInItem ? titleElInItem.textContent.trim() : item.textContent.trim();
+    attachAudioEvents(currentAudio);
+    showController(true);
+  }
+  items.forEach((item) => {
+    const audio = item.querySelector(".sounds-aside__audio");
+    if (!audio) return;
+    item.addEventListener("click", () => {
+      const sourceWithSrc = audio.querySelector("source[src]");
+      if (!sourceWithSrc) {
+        return;
+      }
+      if (currentAudio === audio) {
+        if (audio.paused) {
+          audio.play().then(() => playBtn.classList.add("is-playing")).catch(() => {
+          });
+        } else {
+          audio.pause();
+          playBtn.classList.remove("is-playing");
+        }
+        return;
+      }
+      setActiveItem(item, audio);
+      audio.play().then(() => {
+        playBtn.classList.add("is-playing");
+      }).catch(() => {
+        playBtn.classList.remove("is-playing");
+      });
+    });
+  });
+  playBtn.addEventListener("click", () => {
+    if (!currentAudio) return;
+    if (currentAudio.paused) {
+      currentAudio.play().then(() => {
+        playBtn.classList.add("is-playing");
+      }).catch(() => {
+      });
+    } else {
+      currentAudio.pause();
+      playBtn.classList.remove("is-playing");
+    }
+  });
+  seekInput.addEventListener("input", () => {
+    if (!currentAudio || !currentAudio.duration) return;
+    const percent = parseFloat(seekInput.value) || 0;
+    const newTime = currentAudio.duration * percent / 100;
+    currentAudio.currentTime = newTime;
+    currentTimeEl.textContent = formatTime(newTime);
+  });
+  seekInput.addEventListener("change", () => {
+  });
+  document.addEventListener("click", (event) => {
+    if (!controller.classList.contains("sounds-controller--visible")) return;
+    const target = event.target;
+    const clickInsideController = controller.contains(target);
+    const clickOnItem = Array.from(items).some((item) => item.contains(target));
+    if (!clickInsideController && !clickOnItem) {
+      if (currentAudio) {
+        detachAudioEvents(currentAudio);
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      items.forEach((el) => el.classList.remove("sounds-aside__item--active"));
+      currentAudio = null;
+      resetController();
+      showController(false);
+    }
+  });
+  showController(false);
+})();
